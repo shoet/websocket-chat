@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+export type ChatMessage = {
+  userID: string;
+  message: string;
+};
+
 export const useChat = () => {
   const [socket, setSocket] = useState<Socket>();
   const [userID, setUserID] = useState<string>();
   const [roomID, setRoomID] = useState<string>();
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     const socket = io(`ws://localhost:3000`);
@@ -30,8 +35,10 @@ export const useChat = () => {
       }
     });
 
-    socket.on("chat_message", (message) => {
-      console.log("[chat_message]: ", message);
+    socket.on("chat_message", (payload) => {
+      const { user_id: userID, message } = payload;
+      const newMessage: ChatMessage = { userID: userID, message: message };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
     return (): void => {
@@ -52,6 +59,12 @@ export const useChat = () => {
       console.log("socket not found");
       return;
     }
+    if (!userID) {
+      console.log("userID not found");
+      return;
+    }
+    const newMessage: ChatMessage = { userID, message };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
     socket.emit("send_chat_message", { room_id: roomID, message: message });
   };
 

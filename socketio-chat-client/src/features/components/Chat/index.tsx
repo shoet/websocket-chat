@@ -32,7 +32,7 @@ export const Chat = () => {
     <div>
       <UserStatus userID={userID} roomID={roomID} />
       <JoinRoomForm onClickJoin={handleJoin} />
-      <Messages messages={messages} />
+      {userID && <Messages currentUserID={userID} messages={messages} />}
       <SenderForm handleSubmit={handleSubmit} />
     </div>
   );

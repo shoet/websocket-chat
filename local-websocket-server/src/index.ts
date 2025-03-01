@@ -63,7 +63,9 @@ function sendChatWithoutMeInTheRoom(
   roomID: string,
   message: string
 ): void {
-  socket.broadcast.in(roomID).emit("chat_message", message);
+  socket.broadcast
+    .in(roomID)
+    .emit("chat_message", { user_id: socket.id, message: message });
 }
 
 /**
