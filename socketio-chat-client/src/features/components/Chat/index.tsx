@@ -5,17 +5,11 @@ import { SenderForm } from "../Sender";
 import { UserStatus } from "../UserStatus";
 
 export const Chat = () => {
-  const {
-    id,
-    room,
-    messages,
-    handleJoinChat,
-    handleSendChatMessage,
-    handleDisconnect,
-  } = useChat();
+  const { userID, roomID, messages, handleJoinChat, handleSendChatMessage } =
+    useChat();
 
   const handleSubmit = async (formData: FormData): Promise<void> => {
-    if (!room) {
+    if (!roomID) {
       console.log("room no set");
       return;
     }
@@ -36,7 +30,7 @@ export const Chat = () => {
 
   return (
     <div>
-      <UserStatus id={id} room={room} />
+      <UserStatus userID={userID} roomID={roomID} />
       <JoinRoomForm onClickJoin={handleJoin} />
       <Messages messages={messages} />
       <SenderForm handleSubmit={handleSubmit} />

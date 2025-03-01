@@ -1,14 +1,14 @@
 type Props = {
-  id?: string;
-  room?: string;
+  userID?: string;
+  roomID?: string;
 };
 
 export const UserStatus = (props: Props) => {
-  const { id, room } = props;
+  const { userID, roomID } = props;
   return (
     <div>
-      <div>ID: {id}</div>
-      <div>ROOM: {room}</div>
+      <div>ID: {userID}</div>
+      <div>ROOM: {roomID}</div>
     </div>
   );
 };

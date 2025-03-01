@@ -26,6 +26,10 @@ export class ChatRoomRepository {
   }
 
   postMessageToChatRoom(roomID: string, message: ChatMessage): void {
+    this.saveChatMessage(roomID, message);
+  }
+
+  saveChatMessage(roomID: string, message: ChatMessage): void {
     const chat = this.getChatRoomByID(roomID);
     if (!chat) {
       return;

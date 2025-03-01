@@ -3,8 +3,8 @@ import { io, Socket } from "socket.io-client";
 
 export const useChat = () => {
   const [socket, setSocket] = useState<Socket>();
-  const [id, setID] = useState<string>();
-  const [room, setRoom] = useState<string>();
+  const [userID, setUserID] = useState<string>();
+  const [roomID, setRoomID] = useState<string>();
   const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
@@ -22,8 +22,8 @@ export const useChat = () => {
       switch (event) {
         case "profile":
           const { user_id: userID, room_id: roomID } = JSON.parse(body);
-          setID(userID);
-          setRoom(roomID);
+          setUserID(userID);
+          setRoomID(roomID);
           break;
         default:
           console.log(`event ${event} not found`);
@@ -47,7 +47,7 @@ export const useChat = () => {
     socket.emit("join_room", { room_id: roomID });
   };
 
-  const handleSendChatMessage = (roomID: string, message: string) => {
+  const handleSendChatMessage = (message: string) => {
     if (!socket) {
       console.log("socket not found");
       return;
@@ -56,8 +56,8 @@ export const useChat = () => {
   };
 
   return {
-    id,
-    room,
+    userID,
+    roomID,
     messages,
     handleJoinChat,
     handleSendChatMessage,

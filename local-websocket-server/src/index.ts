@@ -19,7 +19,6 @@ io.on("connection", (socket) => {
   socket.on("join_room", async (payload) => {
     // join_room のPayload
     // { room_id }
-    console.log("join user");
     const { room_id: roomID } = payload;
     const userID = socket.id;
     let chatRoom = chatRoomRepository.getChatRoomByID(roomID);
