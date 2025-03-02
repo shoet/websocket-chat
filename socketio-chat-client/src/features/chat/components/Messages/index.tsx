@@ -1,16 +1,13 @@
-import { ChatMessage } from "../../hooks";
+import { useChat } from "../../hooks";
+import styles from "./index.module.css";
 
-type Props = {
-  currentUserID: string;
-  messages: ChatMessage[];
-};
-export const Messages = (props: Props) => {
-  const { currentUserID, messages } = props;
+export const Messages = () => {
+  const { userID, messages } = useChat();
 
   return (
-    <div>
+    <div className={styles.messages}>
       {messages.map((msg, idx) =>
-        msg.userID == currentUserID ? (
+        msg.userID == userID ? (
           <MessageMe key={idx} message={msg.message} />
         ) : (
           <MessageOther key={idx} userID={msg.userID} message={msg.message} />

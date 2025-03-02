@@ -1,0 +1,16 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  .header {
+  }
+
+  .messages {
+    flex-grow: 1;
+  }
+
+  .sendForm {
+    height: 100px;
+  }
+}

@@ -9,7 +9,7 @@ export const Header = () => {
       <div className={styles.header}>
         <div className={styles.profile}>
           <span className={styles.profileIcon}>
-            <UserIcon size={10} color="white" />
+            <UserIcon size="20px" color="white" />
           </span>
           <span className={styles.userID}>{userID}</span>
           <input name="user_id" type="hidden" value={userID} />

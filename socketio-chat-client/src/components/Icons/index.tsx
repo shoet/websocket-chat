@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./index.module.css";
 
 type IconProps = {
-  size: number;
+  size: string;
   color: string;
 };
 
