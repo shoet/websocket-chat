@@ -1,3 +1,4 @@
+import { UserIcon } from "../../../../components/Icons";
 import { useHeader } from "./hooks";
 import styles from "./index.module.css";
 
@@ -7,7 +8,9 @@ export const Header = () => {
     <form action={submitJoinRoom}>
       <div className={styles.header}>
         <div className={styles.profile}>
-          <span className={styles.profileIcon}>アイコン</span>
+          <span className={styles.profileIcon}>
+            <UserIcon size={10} color="white" />
+          </span>
           <span className={styles.userID}>{userID}</span>
           <input name="user_id" type="hidden" value={userID} />
         </div>

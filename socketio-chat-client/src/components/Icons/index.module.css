@@ -1,0 +1,5 @@
+.icon {
+  height: var(--size) px;
+  width: var(--size) px;
+  color: var(--color);
+}
