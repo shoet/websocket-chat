@@ -1,0 +1,49 @@
+.header {
+  background-color: #06c755;
+  color: white;
+  align-items: center;
+  padding: 20px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .profile {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    gap: 10px;
+
+    .profileIcon {
+    }
+
+    .userID {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  }
+
+  .roomForm {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+
+    .inputRoom {
+      border: none;
+      border-radius: 5px;
+      padding: 10px 10px;
+      font-size: 0.9rem;
+    }
+
+    .joinedRoomID {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .buttonJoinRoom {
+    }
+  }
+}

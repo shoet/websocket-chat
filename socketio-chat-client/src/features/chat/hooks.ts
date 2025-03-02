@@ -44,14 +44,6 @@ export const useChat = () => {
     };
   }, []);
 
-  const handleJoinChat = (roomID: string) => {
-    if (!socket) {
-      console.log("socket not found");
-      return;
-    }
-    socket.emit("join_room", { room_id: roomID });
-  };
-
   const handleSendChatMessage = (message: string) => {
     if (!socket) {
       console.log("socket not found");
@@ -70,7 +62,6 @@ export const useChat = () => {
     userID,
     roomID,
     messages,
-    handleJoinChat,
     handleSendChatMessage,
   };
 };
