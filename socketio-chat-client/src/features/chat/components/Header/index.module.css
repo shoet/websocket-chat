@@ -33,6 +33,7 @@
 
     .inputRoom {
       border: none;
+      outline: none;
       border-radius: 5px;
       padding: 10px 10px;
       font-size: 0.9rem;
