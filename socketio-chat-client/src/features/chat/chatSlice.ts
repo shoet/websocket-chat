@@ -1,7 +1,3 @@
-// ロジック
-// Reducer
-// Actions
-
 import { createSlice } from "@reduxjs/toolkit";
 import { ChatMessage } from "./types";
 
