@@ -1,5 +1,5 @@
 import { CSSProperties, ReactNode } from "react";
-import { faUser } from "@fortawesome/free-regular-svg-icons";
+import { faUser, faPaperPlane } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./index.module.css";
 
@@ -23,3 +23,4 @@ export const withIcon = (Icon: ReactNode) => {
 };
 
 export const UserIcon = withIcon(<FontAwesomeIcon icon={faUser} />);
+export const PaperPlaneIcon = withIcon(<FontAwesomeIcon icon={faPaperPlane} />);

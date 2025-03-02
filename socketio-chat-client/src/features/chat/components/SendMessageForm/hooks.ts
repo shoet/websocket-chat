@@ -7,9 +7,7 @@ export const useSendMessage = () => {
 
   const handleOnChangeMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    if (e.target.value) {
-      setMessage(e.target.value);
-    }
+    setMessage(e.target.value);
   };
 
   const handleSubmit = (formData: FormData) => {
@@ -18,6 +16,7 @@ export const useSendMessage = () => {
       return;
     }
     handleSendChatMessage(message.toString());
+    setMessage("");
   };
 
   return { message, handleOnChangeMessage, handleSubmit };
