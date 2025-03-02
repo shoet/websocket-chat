@@ -1,26 +1,23 @@
-import { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import { useEffect } from "react";
 import { ChatMessage } from "./types";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { postChatMessage, queueError, updateProfile } from "./chatSlice";
+import { connectSocket, socket } from "../../store";
 
 export const useChat = () => {
-  const [socket, setSocket] = useState<Socket>();
-
   const dispatch = useAppDispatch();
   const userID = useAppSelector((state) => state.chat.profile.userID);
   const roomID = useAppSelector((state) => state.chat.profile.roomID);
   const messages = useAppSelector((state) => state.chat.messages);
 
   useEffect(() => {
-    const socket = io(`ws://localhost:3000`);
-    setSocket(socket);
+    connectSocket();
 
-    socket.on("system_message", (message) => {
+    socket?.on("system_message", (message) => {
       console.log("[system_message]: ", message);
     });
 
-    socket.on("system_event", (payload) => {
+    socket?.on("system_event", (payload) => {
       // system_eventのpayload
       // { event: <event名>, body: <JSON> }
       const { event, body } = payload;
@@ -36,14 +33,14 @@ export const useChat = () => {
       }
     });
 
-    socket.on("chat_message", (payload) => {
+    socket?.on("chat_message", (payload) => {
       const { user_id: userID, message } = payload;
       const newMessage: ChatMessage = { userID: userID, message: message };
       dispatch(postChatMessage({ message: newMessage }));
     });
 
     return (): void => {
-      socket.disconnect();
+      socket?.disconnect();
     };
   }, []);
 
