@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatMessage } from "./types";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { postChatMessage, queueError, updateProfile } from "./chatSlice";
 
 export const useChat = () => {
   const [socket, setSocket] = useState<Socket>();
-  const [userID, setUserID] = useState<string>();
-  const [roomID, setRoomID] = useState<string>();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const dispatch = useAppDispatch();
+  const userID = useAppSelector((state) => state.chat.profile.userID);
+  const roomID = useAppSelector((state) => state.chat.profile.roomID);
+  const messages = useAppSelector((state) => state.chat.messages);
 
   useEffect(() => {
     const socket = io(`ws://localhost:3000`);
@@ -18,23 +22,24 @@ export const useChat = () => {
 
     socket.on("system_event", (payload) => {
       // system_eventのpayload
-      // { event: <event名>, body: <{ user_id, room_id }> }
+      // { event: <event名>, body: <JSON> }
       const { event, body } = payload;
       switch (event) {
         case "profile":
           const { user_id: userID, room_id: roomID } = JSON.parse(body);
-          setUserID(userID);
-          setRoomID(roomID);
+          dispatch(updateProfile({ userID, roomID }));
           break;
         default:
-          console.log(`event ${event} not found`);
+          dispatch(
+            queueError({ error: { message: `event ${event} not found` } })
+          );
       }
     });
 
     socket.on("chat_message", (payload) => {
       const { user_id: userID, message } = payload;
       const newMessage: ChatMessage = { userID: userID, message: message };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      dispatch(postChatMessage({ message: newMessage }));
     });
 
     return (): void => {
@@ -60,7 +65,7 @@ export const useChat = () => {
       return;
     }
     const newMessage: ChatMessage = { userID, message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    dispatch(postChatMessage({ message: newMessage }));
     socket.emit("send_chat_message", { room_id: roomID, message: message });
   };
 
