@@ -8,6 +8,7 @@
 
   .messages {
     flex-grow: 1;
+    background-color: #f5f5f5;
   }
 
   .sendForm {

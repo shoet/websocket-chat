@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { useChat } from "../../hooks";
 import styles from "./index.module.css";
 
@@ -8,25 +9,15 @@ export const Messages = () => {
     <div className={styles.messages}>
       {messages.map((msg, idx) =>
         msg.userID == userID ? (
-          <MessageMe key={idx} message={msg.message} />
+          <div className={clsx(styles.message, styles.messageMe)} key={idx}>
+            {msg.message}
+          </div>
         ) : (
-          <MessageOther key={idx} userID={msg.userID} message={msg.message} />
+          <div className={clsx(styles.message, styles.messageOther)} key={idx}>
+            {msg.message}
+          </div>
         )
       )}
-    </div>
-  );
-};
-
-export const MessageMe = (props: { message: string }) => {
-  const { message } = props;
-  return <div>[Me]: {message}</div>;
-};
-
-export const MessageOther = (props: { userID: string; message: string }) => {
-  const { userID, message } = props;
-  return (
-    <div>
-      [{userID}] {message}
     </div>
   );
 };

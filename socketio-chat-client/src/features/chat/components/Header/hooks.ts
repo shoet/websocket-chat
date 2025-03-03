@@ -29,5 +29,12 @@ export const useHeader = () => {
 
   const joined = roomID != undefined;
 
-  return { userID, localRoomID, joined, handleOnChangeRoomID, submitJoinRoom };
+  return {
+    userID,
+    roomID,
+    localRoomID,
+    joined,
+    handleOnChangeRoomID,
+    submitJoinRoom,
+  };
 };

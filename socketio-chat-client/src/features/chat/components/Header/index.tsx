@@ -3,7 +3,7 @@ import { useHeader } from "./hooks";
 import styles from "./index.module.css";
 
 export const Header = () => {
-  const { userID, localRoomID, submitJoinRoom, joined } = useHeader();
+  const { userID, roomID, localRoomID, submitJoinRoom, joined } = useHeader();
   return (
     <form action={submitJoinRoom}>
       <div className={styles.header}>
@@ -16,9 +16,7 @@ export const Header = () => {
         </div>
         <div className={styles.roomForm}>
           {joined ? (
-            <div className={styles.joinedRoomID}>
-              Joined room [ {localRoomID} ]
-            </div>
+            <div className={styles.joinedRoomID}>Joined room [ {roomID} ]</div>
           ) : (
             <input
               className={styles.inputRoom}

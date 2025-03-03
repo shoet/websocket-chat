@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useChat } from "../../hooks";
 
 export const useSendMessage = () => {
-  const { handleSendChatMessage } = useChat();
+  const { roomID, handleSendChatMessage } = useChat();
   const [message, setMessage] = useState<string>();
 
   const handleOnChangeMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -11,6 +11,9 @@ export const useSendMessage = () => {
   };
 
   const handleSubmit = (formData: FormData) => {
+    if (!roomID) {
+      return;
+    }
     const message = formData.get("message");
     if (!message) {
       return;
