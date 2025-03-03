@@ -1,4 +1,4 @@
-import { Chat } from "./features/components/Chat";
+import { Chat } from "./features/chat/components/Chat";
 
 function App() {
   return (
