@@ -44,13 +44,11 @@ type ChatWebSocketContextValue = {
   clientID?: string;
   roomID?: string;
   joinRoom: (roomID: string) => void;
-  sendMessage: (message: string) => void;
   sendMessageToRoom: (roomID: string, message: string) => void;
 };
 
 const ChatWebSocketContext = createContext<ChatWebSocketContextValue>({
   joinRoom: () => {},
-  sendMessage: () => {},
   sendMessageToRoom: () => {},
 });
 
@@ -64,7 +62,11 @@ function requestLog(message: string): void {
 type MessagePayload =
   | { type: "init_profile"; data: { client_id: string } }
   | { type: "update_profile"; data: { client_id: string; room_id: string } }
-  | { type: "system_message"; data: { message: string } };
+  | { type: "system_message"; data: { message: string } }
+  | {
+      type: "chat_message";
+      data: { room_id: string; client_id: string; message: string };
+    };
 
 export const ChatWebSocketContextProvider = (props: {
   children: ReactNode;
@@ -94,13 +96,15 @@ export const ChatWebSocketContextProvider = (props: {
               setRoomID(data.room_id);
             }
             break;
+          case "chat_message":
+            console.log("chat: ", data);
+            break;
           case "system_message":
+            console.log(data.message);
             break;
           default:
             throw new Error(`unknown type: ${type}`);
         }
-        console.log("[log] receive message");
-        console.log(message);
       },
     });
     setConnection(connection);
@@ -122,9 +126,16 @@ export const ChatWebSocketContextProvider = (props: {
     }
   };
 
-  const sendMessage = (message: string) => {};
-
-  const sendMessageToRoom = (roomID: string, message: string) => {};
+  const sendMessageToRoom = (roomID: string, message: string) => {
+    if (connection && clientID) {
+      connection.sendMessage(
+        JSON.stringify({
+          type: "chat_message",
+          data: { room_id: roomID, client_id: clientID, message: message },
+        })
+      );
+    }
+  };
 
   return (
     <ChatWebSocketContext.Provider
@@ -132,7 +143,6 @@ export const ChatWebSocketContextProvider = (props: {
         clientID,
         roomID,
         joinRoom,
-        sendMessage,
         sendMessageToRoom,
       }}
     >

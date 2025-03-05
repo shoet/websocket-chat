@@ -24,12 +24,17 @@ const wss = new WebSocketServer({
 });
 
 const connections = new Map<string, WebSocket>();
-const rooms = new Map<string, string>();
+const rooms = new Map<string, string[]>();
 
-type MessagePayload = {
-  type: "join_room";
-  data: { room_id: string; client_id: string };
-};
+type MessagePayload =
+  | {
+    type: "join_room";
+    data: { room_id: string; client_id: string };
+  }
+  | {
+    type: "chat_message";
+    data: { room_id: string; client_id: string; message: string };
+  };
 
 wss.on("connection", (socket) => {
   console.log("connected");
@@ -43,13 +48,22 @@ wss.on("connection", (socket) => {
     const { type, data }: MessagePayload = JSON.parse(message.toString());
     switch (type) {
       case "join_room":
-        rooms.set(data.client_id, data.room_id);
+        joinRoom(data.room_id, data.client_id);
         socket.send(
           JSON.stringify({
             type: "update_profile",
             data: { client_id: data.client_id, room_id: data.room_id },
           })
         );
+        broadCastInRoom(data.room_id, {
+          type: "system_message",
+          data: {
+            message: `${data.client_id}さんが ${data.room_id}に入出しました。`,
+          },
+        });
+        break;
+      case "chat_message":
+        broadCastInRoom(data.room_id, { type: "chat_message", data: data });
         break;
       default:
         console.error(`uknown type: ${type}`);
@@ -61,3 +75,22 @@ wss.on("connection", (socket) => {
     console.log(code, reason);
   });
 });
+
+function joinRoom(roomID: string, userID: string): void {
+  const userIDs = rooms.get(roomID);
+  if (!userIDs || userIDs.length == 0) {
+    rooms.set(roomID, [userID]);
+  } else {
+    userIDs.push(userID);
+    rooms.set(roomID, userIDs);
+  }
+}
+
+function broadCastInRoom(roomID: string, payload: any): void {
+  rooms.get(roomID)?.forEach((userID) => {
+    const socket = connections.get(userID);
+    if (socket) {
+      socket.send(JSON.stringify(payload));
+    }
+  });
+}
