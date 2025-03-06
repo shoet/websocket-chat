@@ -1,0 +1,24 @@
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+
+  .message {
+    border-radius: 5px;
+    width: fit-content;
+    padding: 10px;
+  }
+
+  .messageMe {
+    background-color: #06c755;
+    color: white;
+    align-self: flex-end;
+  }
+
+  .messageOther {
+    background-color: white;
+    color: #424242;
+    align-self: flex-start;
+  }
+}

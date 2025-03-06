@@ -1,0 +1,7 @@
+.icon {
+  color: var(--color);
+
+  svg {
+    height: var(--size);
+  }
+}

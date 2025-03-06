@@ -5,6 +5,8 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useAppDispatch } from "../../../../hooks";
+import { changeRoom, updateProfile } from "../../chatSlice";
 
 class ChatWebSocketConnection {
   private host: string;
@@ -41,10 +43,12 @@ class ChatWebSocketConnection {
 }
 
 type ChatWebSocketContextValue = {
-  clientID?: string;
-  roomID?: string;
-  joinRoom: (roomID: string) => void;
-  sendMessageToRoom: (roomID: string, message: string) => void;
+  joinRoom: (clientID: string, roomID: string) => void;
+  sendMessageToRoom: (
+    clientID: string,
+    roomID: string,
+    message: string
+  ) => void;
 };
 
 const ChatWebSocketContext = createContext<ChatWebSocketContextValue>({
@@ -71,9 +75,8 @@ type MessagePayload =
 export const ChatWebSocketContextProvider = (props: {
   children: ReactNode;
 }) => {
+  const dispatch = useAppDispatch();
   const [connection, setConnection] = useState<ChatWebSocketConnection>();
-  const [clientID, setClientID] = useState<string>();
-  const [roomID, setRoomID] = useState<string>();
 
   useEffect(() => {
     const connection = new ChatWebSocketConnection({
@@ -86,14 +89,14 @@ export const ChatWebSocketContextProvider = (props: {
         const { type, data }: MessagePayload = JSON.parse(message);
         switch (type) {
           case "init_profile":
-            setClientID(data.client_id);
+            dispatch(updateProfile({ clientID: data.client_id }));
             break;
           case "update_profile":
             if (data.client_id) {
-              setClientID(data.client_id);
+              dispatch(updateProfile({ clientID: data.client_id }));
             }
             if (data.room_id) {
-              setRoomID(data.room_id);
+              dispatch(updateProfile({ roomID: data.room_id }));
             }
             break;
           case "chat_message":
@@ -111,11 +114,7 @@ export const ChatWebSocketContextProvider = (props: {
     return connection.close();
   }, []);
 
-  useEffect(() => {
-    console.log(clientID);
-  }, [clientID]);
-
-  const joinRoom = (roomID: string) => {
+  const joinRoom = (clientID: string, roomID: string) => {
     if (connection && clientID) {
       connection.sendMessage(
         JSON.stringify({
@@ -123,10 +122,15 @@ export const ChatWebSocketContextProvider = (props: {
           data: { room_id: roomID, client_id: clientID },
         })
       );
+      dispatch(changeRoom);
     }
   };
 
-  const sendMessageToRoom = (roomID: string, message: string) => {
+  const sendMessageToRoom = (
+    clientID: string,
+    roomID: string,
+    message: string
+  ) => {
     if (connection && clientID) {
       connection.sendMessage(
         JSON.stringify({
@@ -140,8 +144,6 @@ export const ChatWebSocketContextProvider = (props: {
   return (
     <ChatWebSocketContext.Provider
       value={{
-        clientID,
-        roomID,
         joinRoom,
         sendMessageToRoom,
       }}
