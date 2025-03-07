@@ -5,7 +5,7 @@ type Profile = {
   roomID?: string;
 };
 
-type Message = {
+export type Message = {
   clientID: string;
   message: string;
   timestamp: number;
@@ -36,13 +36,32 @@ export const chatSlice = createSlice({
         state.profile.roomID = roomID;
       }
     },
-    receiveChatMessage: (state, action: { type: string; payload: any }) => {},
+    receiveChatMessage: (
+      state,
+      action: {
+        type: string;
+        payload: {
+          clientID: string;
+          roomID: string;
+          timestamp: number;
+          message: string;
+        };
+      }
+    ) => {
+      const newMessage: Message = {
+        clientID: action.payload.clientID,
+        message: action.payload.message,
+        timestamp: action.payload.timestamp,
+      };
+      state.messages.push(newMessage);
+    },
     changeRoom: (state, action: { type: string; payload: any }) => {
       state.messages = []; // ルームが変更になったので初期化する
     },
   },
 });
 
-export const { updateProfile, changeRoom } = chatSlice.actions;
+export const { updateProfile, changeRoom, receiveChatMessage } =
+  chatSlice.actions;
 
 export const chatReducer = chatSlice.reducer;

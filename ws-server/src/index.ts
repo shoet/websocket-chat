@@ -23,18 +23,33 @@ const wss = new WebSocketServer({
   },
 });
 
-const connections = new Map<string, WebSocket>();
-const rooms = new Map<string, string[]>();
+const connections = new Map<ClientID, WebSocket>();
+
+type RoomID = string;
+type ClientID = string;
+const rooms = new Map<RoomID, ClientID[]>();
+const chatRooms = new Map<RoomID, ChatMessage[]>();
+
+type ChatMessage = {
+  clientID: string;
+  roomID: string;
+  message: string;
+  timestamp: number;
+};
 
 type MessagePayload =
   | {
-    type: "join_room";
-    data: { room_id: string; client_id: string };
-  }
+      type: "join_room";
+      data: { room_id: string; client_id: string };
+    }
   | {
-    type: "chat_message";
-    data: { room_id: string; client_id: string; message: string };
-  };
+      type: "chat_message";
+      data: {
+        room_id: string;
+        client_id: string;
+        message: string;
+      };
+    };
 
 wss.on("connection", (socket) => {
   console.log("connected");
@@ -63,7 +78,24 @@ wss.on("connection", (socket) => {
         });
         break;
       case "chat_message":
-        broadCastInRoom(data.room_id, { type: "chat_message", data: data });
+        const newChatMessage: ChatMessage = {
+          clientID: data.client_id,
+          roomID: data.room_id,
+          message: data.message,
+          timestamp: Date.now(),
+        };
+        const chatRoom = chatRooms.get(data.room_id) || [];
+        chatRoom.push(newChatMessage);
+        chatRooms.set(data.room_id, chatRoom);
+        broadCastInRoom(data.room_id, {
+          type: "chat_message",
+          data: {
+            client_id: data.client_id,
+            room_id: data.room_id,
+            message: data.message,
+            timestamp: newChatMessage.timestamp,
+          },
+        });
         break;
       default:
         console.error(`uknown type: ${type}`);

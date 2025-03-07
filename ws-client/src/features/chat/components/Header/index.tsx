@@ -3,7 +3,7 @@ import { useHeader } from "./hooks";
 import styles from "./index.module.css";
 
 export const Header = () => {
-  const { clientID, roomID, localRoomID, submitJoinRoom, joined } = useHeader();
+  const { clientID, roomID, submitJoinRoom, joined } = useHeader();
   return (
     <form action={submitJoinRoom}>
       <div className={styles.header}>
@@ -12,7 +12,7 @@ export const Header = () => {
             <UserIcon size="20px" color="white" />
           </span>
           <span className={styles.userID}>{clientID}</span>
-          <input name="user_id" type="hidden" value={clientID} />
+          <input name="user_id" type="hidden" value={clientID || ""} />
         </div>
         <div className={styles.roomForm}>
           {joined ? (
@@ -23,7 +23,6 @@ export const Header = () => {
               name="room_id"
               type="text"
               placeholder="RoomID"
-              value={localRoomID}
             />
           )}
         </div>

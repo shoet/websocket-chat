@@ -5,9 +5,23 @@
   padding: 10px;
 
   .message {
-    border-radius: 5px;
+    border-radius: 10px;
     width: fit-content;
     padding: 10px;
+
+    .messageName {
+      color: black;
+      font-size: 0.6rem;
+      font-weight: bold;
+    }
+    .messageText {
+      margin: 5px 0px;
+    }
+    .messageTime {
+      color: #d3d3d3;
+      font-size: 0.5rem;
+      text-align: right;
+    }
   }
 
   .messageMe {

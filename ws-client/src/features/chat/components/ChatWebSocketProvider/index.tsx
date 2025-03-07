@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { useAppDispatch } from "../../../../hooks";
-import { changeRoom, updateProfile } from "../../chatSlice";
+import { changeRoom, receiveChatMessage, updateProfile } from "../../chatSlice";
 
 class ChatWebSocketConnection {
   private host: string;
@@ -69,7 +69,12 @@ type MessagePayload =
   | { type: "system_message"; data: { message: string } }
   | {
       type: "chat_message";
-      data: { room_id: string; client_id: string; message: string };
+      data: {
+        room_id: string;
+        client_id: string;
+        message: string;
+        timestamp: number;
+      };
     };
 
 export const ChatWebSocketContextProvider = (props: {
@@ -100,7 +105,14 @@ export const ChatWebSocketContextProvider = (props: {
             }
             break;
           case "chat_message":
-            console.log("chat: ", data);
+            dispatch(
+              receiveChatMessage({
+                clientID: data.client_id,
+                roomID: data.room_id,
+                message: data.message,
+                timestamp: data.timestamp,
+              })
+            );
             break;
           case "system_message":
             console.log(data.message);
