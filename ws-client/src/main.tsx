@@ -6,10 +6,12 @@ import { ChatWebSocketContextProvider } from "./features/chat/components/ChatWeb
 import { Provider as StoreProvider } from "react-redux";
 import { store } from "./store.ts";
 
+const websocketHost = import.meta.env.VITE_WEBSOCKET_HOST;
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <StoreProvider store={store}>
-      <ChatWebSocketContextProvider>
+      <ChatWebSocketContextProvider host={websocketHost}>
         <App />
       </ChatWebSocketContextProvider>
     </StoreProvider>

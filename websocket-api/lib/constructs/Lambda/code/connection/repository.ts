@@ -67,7 +67,7 @@ export class ConnectionRepository
         connection_id: { S: connectionID },
         created_at: { N: now.toString() },
         updated_at: { N: now.toString() },
-        expire_at: { N: now.toString() + 3600 }, // 1時間後にレコードを削除する
+        expire_at: { N: (now + 3600).toString() }, // 1時間後にレコードを削除する
       },
     });
     try {
@@ -150,7 +150,7 @@ export class ChatMessageRepository
         timestamp: { N: timestamp.toString() },
         created_at: { N: now.toString() },
         updated_at: { N: now.toString() },
-        expire_at: { N: now.toString() + 3600 }, // 1時間後にレコードを削除する
+        expire_at: { N: (now + 3600).toString() }, // 1時間後にレコードを削除する
       },
     });
     try {

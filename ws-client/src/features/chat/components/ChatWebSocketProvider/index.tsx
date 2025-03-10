@@ -14,16 +14,16 @@ class ChatWebSocketConnection {
 
   constructor(props: {
     host: string;
-    openCb?: () => void;
+    openCb?: (socket: WebSocket) => void;
     messageCb?: (message: string) => void;
   }) {
     const { host, openCb, messageCb } = props;
 
     this.host = host;
-    this.socket = new WebSocket(`ws://${this.host}`);
+    this.socket = new WebSocket(`${this.host}`);
 
     this.socket.addEventListener("open", () => {
-      openCb && openCb();
+      openCb && openCb(this.socket);
     });
 
     this.socket.addEventListener("message", (message) => {
@@ -78,6 +78,7 @@ type MessagePayload =
     };
 
 export const ChatWebSocketContextProvider = (props: {
+  host: string;
   children: ReactNode;
 }) => {
   const dispatch = useAppDispatch();
@@ -85,9 +86,13 @@ export const ChatWebSocketContextProvider = (props: {
 
   useEffect(() => {
     const connection = new ChatWebSocketConnection({
-      host: "localhost:3000",
-      openCb: () => {
+      host: props.host,
+      openCb: (socket: WebSocket) => {
         console.log("[log] connected");
+        // Connectionが確立したタイミングでpingを送信
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send("ping");
+        }
       },
       messageCb: (message) => {
         requestLog(message);
