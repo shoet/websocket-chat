@@ -91,6 +91,8 @@ export const customEventHandler: Handler = async (
       await sendMessage(connectionID, data.message);
       break;
     case "join_room":
+      await joinRoom(data.room_id, data.client_id);
+      break;
 
     default:
       console.log("unknown type", type);
@@ -101,6 +103,10 @@ export const customEventHandler: Handler = async (
   };
 };
 
+const joinRoom = async (roomID: string, clientID: string) => {
+  const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
+  await roomRepository.saveUserRoom(roomID, clientID);
+};
 const sendMessage = async (connectionID: string, message: string) => {
   const callbackUrl = env.CALLBACK_URL;
   const client = new ApiGatewayManagementApiClient({ endpoint: callbackUrl });

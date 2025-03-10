@@ -35,6 +35,12 @@ class ChatWebSocketConnection {
     this.socket.send(message);
   };
 
+  sendCustomMessage = (message: string) => {
+    this.socket.send(
+      JSON.stringify({ action: "custom_event", message: message })
+    );
+  };
+
   close = () => {
     if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.close();
@@ -58,11 +64,6 @@ const ChatWebSocketContext = createContext<ChatWebSocketContextValue>({
 
 export const useChatWebSocket = () => useContext(ChatWebSocketContext);
 
-function requestLog(message: string): void {
-  const { type, data } = JSON.parse(message);
-  console.log(`[${type}] ${data}`);
-}
-
 type MessagePayload =
   | { type: "init_profile"; data: { client_id: string } }
   | { type: "update_profile"; data: { client_id: string; room_id: string } }
@@ -76,6 +77,14 @@ type MessagePayload =
         timestamp: number;
       };
     };
+
+const tryParseMessage = (message: string): MessagePayload | undefined => {
+  try {
+    return JSON.parse(message);
+  } catch (e) {
+    console.log("failed to parse request");
+  }
+};
 
 export const ChatWebSocketContextProvider = (props: {
   host: string;
@@ -95,8 +104,11 @@ export const ChatWebSocketContextProvider = (props: {
         }
       },
       messageCb: (message) => {
-        requestLog(message);
-        const { type, data }: MessagePayload = JSON.parse(message);
+        const request = tryParseMessage(message);
+        if (!request) {
+          return;
+        }
+        const { type, data } = request;
         switch (type) {
           case "init_profile":
             dispatch(updateProfile({ clientID: data.client_id }));
@@ -133,7 +145,7 @@ export const ChatWebSocketContextProvider = (props: {
 
   const joinRoom = (clientID: string, roomID: string) => {
     if (connection && clientID) {
-      connection.sendMessage(
+      connection.sendCustomMessage(
         JSON.stringify({
           type: "join_room",
           data: { room_id: roomID, client_id: clientID },
@@ -149,7 +161,7 @@ export const ChatWebSocketContextProvider = (props: {
     message: string
   ) => {
     if (connection && clientID) {
-      connection.sendMessage(
+      connection.sendCustomMessage(
         JSON.stringify({
           type: "chat_message",
           data: { room_id: roomID, client_id: clientID, message: message },
