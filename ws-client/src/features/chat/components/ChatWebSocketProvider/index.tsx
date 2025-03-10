@@ -135,7 +135,7 @@ export const ChatWebSocketContextProvider = (props: {
             console.log(data.message);
             break;
           default:
-            throw new Error(`unknown type: ${type}`);
+            console.log("unknown action", type);
         }
       },
     });

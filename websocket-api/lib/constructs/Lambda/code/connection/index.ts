@@ -76,66 +76,72 @@ export const customEventHandler: Handler = async (
   const { type, data }: CustomEventPayload = JSON.parse(message);
   switch (type) {
     case "chat_message":
-      const connectionRepository = new ConnectionRepository(
-        env.CONNECTION_TABLE_NAME
-      );
-      const connectionID = await connectionRepository.getConnectionID(
-        data.client_id
-      );
-      if (!connectionID) {
-        console.error("connection not found");
-        return {
-          statusCode: 404,
-        };
-      }
-      await sendMessage(connectionID, data.message);
-      break;
+      await sendMessage(data.client_id, data.message);
+      return { statusCode: 200 };
+
     case "join_room":
       await joinRoom(data.room_id, data.client_id);
-      break;
+      await sendMessage(
+        data.client_id,
+        JSON.stringify({
+          type: "update_profile",
+          data: { room_id: data.room_id },
+        })
+      );
+      await sendMessageToRoom(
+        data.room_id,
+        JSON.stringify({
+          type: "system_message",
+          data: { message: `${data.client_id}さんが入室しました。` },
+        })
+      );
+      return { statusCode: 200 };
 
     default:
       console.log("unknown type", type);
+      return { statusCode: 200 };
   }
-
-  return {
-    statusCode: 200,
-  };
 };
 
 const joinRoom = async (roomID: string, clientID: string) => {
   const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
   await roomRepository.saveUserRoom(roomID, clientID);
 };
-const sendMessage = async (connectionID: string, message: string) => {
-  const callbackUrl = env.CALLBACK_URL;
-  const client = new ApiGatewayManagementApiClient({ endpoint: callbackUrl });
 
-  const getConnectionCommand = new GetConnectionCommand({
-    ConnectionId: connectionID,
-  });
-  try {
-    await client.send(getConnectionCommand);
-  } catch (e) {
-    console.error(e);
-    return {
-      statusCode: 500,
-    };
+const sendMessageToRoom = async (roomID: string, message: string) => {
+  const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
+
+  const room = await roomRepository.getRoom(roomID);
+  if (!room) {
+    throw new Error(`roomID not found: ${roomID}`);
   }
 
-  const command = new PostToConnectionCommand({
-    ConnectionId: connectionID,
-    Data: message,
-  });
+  await Promise.all(
+    room.clientIDs.map((clientID) => clientID && sendMessage(clientID, message))
+  );
+};
+
+const sendMessage = async (clientID: string, message: string) => {
+  const callbackUrl = env.CALLBACK_URL;
+  const client = new ApiGatewayManagementApiClient({ endpoint: callbackUrl });
+  const connectionRepository = new ConnectionRepository(
+    env.CONNECTION_TABLE_NAME
+  );
+  const connectionID = await connectionRepository.getConnectionID(clientID);
+
   try {
+    const getConnectionCommand = new GetConnectionCommand({
+      ConnectionId: connectionID,
+    });
+    await client.send(getConnectionCommand);
+
+    const command = new PostToConnectionCommand({
+      ConnectionId: connectionID,
+      Data: message,
+    });
     await client.send(command);
-    return {
-      statusCode: 200,
-    };
   } catch (e) {
-    console.error(e);
-    return {
-      statusCode: 500,
-    };
+    console.error("failed to sendMessage", e);
+    throw e;
   }
 };

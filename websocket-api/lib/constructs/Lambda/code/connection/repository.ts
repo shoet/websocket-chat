@@ -22,6 +22,10 @@ export interface IChatMessageRepository {
 type ClientID = string;
 type ConnectionID = string;
 type RoomID = string;
+type Room = {
+  roomID: RoomID;
+  clientIDs: ClientID[];
+};
 
 export class LocalRoomRepository implements IRoomRepository {
   private rooms: Map<RoomID, ClientID[]>;
@@ -121,6 +125,30 @@ export class RoomRepository
       await this.ddbClient.send(putCommand);
     } catch (e) {
       console.error("failed to saveUserRoom", e);
+      throw e;
+    }
+  }
+
+  async getRoom(roomID: RoomID): Promise<Room | undefined> {
+    const queryCommand = new ddb.QueryCommand({
+      TableName: this.ddbTableName,
+      KeyConditionExpression: "room_id = :room_id",
+      ExpressionAttributeValues: {
+        ":room_id": { S: roomID },
+      },
+    });
+    try {
+      const result = await this.ddbClient.send(queryCommand);
+      const clientIDs: string[] = [];
+      result.Items?.forEach((item) => {
+        const clientID = item["client_id"].S;
+        if (clientID) {
+          clientIDs.push(clientID);
+        }
+      });
+      return { roomID, clientIDs };
+    } catch (e) {
+      console.error("failed to query table", e);
       throw e;
     }
   }

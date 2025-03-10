@@ -4,7 +4,7 @@ import {
   RoomRepository,
 } from "./repository";
 import * as cfn from "@aws-sdk/client-cloudformation";
-import "./extentions";
+import "./extensions";
 
 export async function main() {
   const cfnClient = new cfn.CloudFormationClient({});
@@ -35,11 +35,15 @@ export async function main() {
         connectionTableName
       );
       await connectionRepository.saveConnection(clientID, "connection id");
+      const connectionID = await connectionRepository.getConnectionID(clientID);
+      console.log(connectionID);
     }
 
     if (roomTableName) {
       const roomRepository = new RoomRepository(roomTableName);
       await roomRepository.saveUserRoom("room_a", clientID);
+      const room = await roomRepository.getRoom("room_a");
+      console.log(room);
     }
 
     if (chatMessageTableName) {
