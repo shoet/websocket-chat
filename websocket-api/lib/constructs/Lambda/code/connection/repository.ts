@@ -152,6 +152,22 @@ export class RoomRepository
       throw e;
     }
   }
+
+  async deleteFromRoom(roomID: RoomID, clientID: ClientID): Promise<void> {
+    const deleteCommand = new ddb.DeleteItemCommand({
+      TableName: this.ddbTableName,
+      Key: {
+        room_id: { S: roomID },
+        client_id: { S: clientID },
+      },
+    });
+    try {
+      await this.ddbClient.send(deleteCommand);
+    } catch (e) {
+      console.error("failed to delete table", e);
+      throw e;
+    }
+  }
 }
 
 export class ChatMessageRepository

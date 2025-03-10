@@ -44,6 +44,8 @@ export async function main() {
       await roomRepository.saveUserRoom("room_a", clientID);
       const room = await roomRepository.getRoom("room_a");
       console.log(room);
+
+      await roomRepository.deleteFromRoom("room_a", clientID);
     }
 
     if (chatMessageTableName) {

@@ -8,8 +8,18 @@ import { z } from "zod";
 import {
   ApiGatewayManagementApiClient,
   GetConnectionCommand,
+  GoneException,
   PostToConnectionCommand,
 } from "@aws-sdk/client-apigatewaymanagementapi";
+import { DeleteItemCommand } from "@aws-sdk/client-dynamodb";
+
+class ConnectionNotFoundError extends Error {
+  readonly message: string;
+  constructor() {
+    super();
+    this.message = "connection not found";
+  }
+}
 
 var environment = z.object({
   CONNECTION_TABLE_NAME: z.string().min(1),
@@ -117,7 +127,25 @@ const sendMessageToRoom = async (roomID: string, message: string) => {
   }
 
   await Promise.all(
-    room.clientIDs.map((clientID) => clientID && sendMessage(clientID, message))
+    room.clientIDs.map((clientID) =>
+      clientID
+        ? sendMessage(clientID, message).catch(async (e) => {
+            // GoneExceptionの場合はコネクションが破棄されているものとして、ルームから削除する
+            if (
+              e instanceof GoneException ||
+              e instanceof ConnectionNotFoundError
+            ) {
+              await roomRepository.deleteFromRoom(room.roomID, clientID);
+              console.log("deleted discarded connection", {
+                clientID: clientID,
+              });
+            } else {
+              console.error("failed to delete from room", e);
+              throw e;
+            }
+          })
+        : Promise.resolve()
+    )
   );
 };
 
@@ -128,20 +156,36 @@ const sendMessage = async (clientID: string, message: string) => {
     env.CONNECTION_TABLE_NAME
   );
   const connectionID = await connectionRepository.getConnectionID(clientID);
+  if (!connectionID) {
+    throw new ConnectionNotFoundError();
+  }
 
   try {
     const getConnectionCommand = new GetConnectionCommand({
       ConnectionId: connectionID,
     });
     await client.send(getConnectionCommand);
+  } catch (e) {
+    if (e instanceof Error) {
+      console.error("failed to get connection", e);
+    } else {
+      console.error("failed to get connection. occurred unknown error", e);
+    }
+    throw e;
+  }
 
+  try {
     const command = new PostToConnectionCommand({
       ConnectionId: connectionID,
       Data: message,
     });
     await client.send(command);
   } catch (e) {
-    console.error("failed to sendMessage", e);
+    if (e instanceof Error) {
+      console.error("failed to sendMessage", e);
+    } else {
+      console.error("failed to sendMessage. occurred unknown error", e);
+    }
     throw e;
   }
 };

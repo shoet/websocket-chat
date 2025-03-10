@@ -37,7 +37,7 @@ export class Lambda extends Construct {
         entry: path.join(__dirname, "code/connection/index.ts"),
         handler: "customEventHandler",
         runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
-        timeout: cdk.Duration.seconds(5),
+        timeout: cdk.Duration.seconds(30),
         environment: {
           CONNECTION_TABLE_NAME: props.connection_table_name,
           ROOM_TABLE_NAME: props.room_table_name,

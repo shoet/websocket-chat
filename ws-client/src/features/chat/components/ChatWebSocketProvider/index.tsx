@@ -104,6 +104,10 @@ export const ChatWebSocketContextProvider = (props: {
         }
       },
       messageCb: (message) => {
+        if (message === "") {
+          // 空文字のメッセージが飛んでくることがあるため無視する
+          return;
+        }
         const request = tryParseMessage(message);
         if (!request) {
           return;
