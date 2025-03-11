@@ -6,7 +6,13 @@ import {
   useState,
 } from "react";
 import { useAppDispatch } from "../../../../hooks";
-import { changeRoom, receiveChatMessage, updateProfile } from "../../chatSlice";
+import {
+  changeRoom,
+  Message,
+  receiveChatMessage,
+  saveLocalChatMessages,
+  updateProfile,
+} from "../../chatSlice";
 
 class ChatWebSocketConnection {
   private host: string;
@@ -165,10 +171,22 @@ export const ChatWebSocketContextProvider = (props: {
     message: string
   ) => {
     if (connection && clientID) {
+      const now = Date.now();
+      const newMessage: Message = {
+        clientID,
+        message,
+        timestamp: now,
+      };
+      dispatch(saveLocalChatMessages({ message: newMessage }));
       connection.sendCustomMessage(
         JSON.stringify({
           type: "chat_message",
-          data: { room_id: roomID, client_id: clientID, message: message },
+          data: {
+            room_id: roomID,
+            client_id: clientID,
+            message: message,
+            timestamp: now,
+          },
         })
       );
     }

@@ -72,6 +72,7 @@ type CustomEventPayload =
         room_id: string;
         client_id: string;
         message: string;
+        timestamp: number;
       };
     };
 
@@ -86,7 +87,15 @@ export const customEventHandler: Handler = async (
   const { type, data }: CustomEventPayload = JSON.parse(message);
   switch (type) {
     case "chat_message":
-      await sendChatMessageToRoom(data.room_id, data.client_id, data.message);
+      await sendChatMessageToRoom(
+        data.room_id,
+        data.client_id,
+        data.message,
+        data.timestamp,
+        {
+          broadcast: true, // 自分には送信しない
+        }
+      );
       return { statusCode: 200 };
 
     case "join_room":
@@ -110,9 +119,10 @@ export const customEventHandler: Handler = async (
 const sendChatMessageToRoom = async (
   roomID: string,
   fromClientID: string,
-  message: string
+  message: string,
+  timestamp: number,
+  option?: { broadcast?: boolean }
 ) => {
-  const now = new Date();
   const chatMessageRepository = new ChatMessageRepository(
     env.CHAT_MESSAGE_TABLE_NAME
   );
@@ -122,7 +132,7 @@ const sendChatMessageToRoom = async (
       roomID,
       fromClientID,
       message,
-      now.toTimestampInSeconds()
+      Math.floor(timestamp / 1000)
     ),
     sendMessageToRoom(
       roomID,
@@ -132,9 +142,10 @@ const sendChatMessageToRoom = async (
           client_id: fromClientID,
           room_id: roomID,
           message,
-          timestamp: now.getTime(),
+          timestamp: timestamp,
         },
-      })
+      }),
+      option?.broadcast ? { ignoreClientIDs: [fromClientID] } : undefined
     ),
   ]);
 };
@@ -168,7 +179,11 @@ const joinRoom = async (roomID: string, clientID: string) => {
 };
 
 // base send event /////////////////////////////
-const sendMessageToRoom = async (roomID: string, message: string) => {
+const sendMessageToRoom = async (
+  roomID: string,
+  message: string,
+  option?: { ignoreClientIDs?: string[] }
+) => {
   const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
 
   const room = await roomRepository.getRoom(roomID);
@@ -177,25 +192,31 @@ const sendMessageToRoom = async (roomID: string, message: string) => {
   }
 
   await Promise.all(
-    room.clientIDs.map((clientID) =>
-      clientID
-        ? sendMessage(clientID, message).catch(async (e) => {
-            // GoneExceptionの場合はコネクションが破棄されているものとして、ルームから削除する
-            if (
-              e instanceof GoneException ||
-              e instanceof ConnectionNotFoundError
-            ) {
-              await roomRepository.deleteFromRoom(room.roomID, clientID);
-              console.log("deleted discarded connection", {
-                clientID: clientID,
-              });
-            } else {
-              console.error("failed to delete from room", e);
-              throw e;
-            }
-          })
-        : Promise.resolve()
-    )
+    room.clientIDs.map(async (clientID) => {
+      // 送信を除外するClientID
+      if (option?.ignoreClientIDs?.includes(clientID)) {
+        return await Promise.resolve();
+      }
+      if (clientID) {
+        return await sendMessage(clientID, message).catch(async (e) => {
+          // GoneExceptionの場合はコネクションが破棄されているものとして、ルームから削除する
+          if (
+            e instanceof GoneException ||
+            e instanceof ConnectionNotFoundError
+          ) {
+            await roomRepository.deleteFromRoom(room.roomID, clientID);
+            console.log("deleted discarded connection", {
+              clientID: clientID,
+            });
+          } else {
+            console.error("failed to delete from room", e);
+            throw e;
+          }
+        });
+      } else {
+        return await Promise.resolve();
+      }
+    })
   );
 };
 

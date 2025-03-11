@@ -58,10 +58,20 @@ export const chatSlice = createSlice({
     changeRoom: (state, action: { type: string; payload: any }) => {
       state.messages = []; // ルームが変更になったので初期化する
     },
+    saveLocalChatMessages: (
+      state,
+      action: { type: string; payload: { message: Message } }
+    ) => {
+      state.messages.push(action.payload.message);
+    },
   },
 });
 
-export const { updateProfile, changeRoom, receiveChatMessage } =
-  chatSlice.actions;
+export const {
+  updateProfile,
+  changeRoom,
+  receiveChatMessage,
+  saveLocalChatMessages,
+} = chatSlice.actions;
 
 export const chatReducer = chatSlice.reducer;
