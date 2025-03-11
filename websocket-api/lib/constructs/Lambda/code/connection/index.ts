@@ -86,25 +86,18 @@ export const customEventHandler: Handler = async (
   const { type, data }: CustomEventPayload = JSON.parse(message);
   switch (type) {
     case "chat_message":
-      await sendMessage(data.client_id, data.message);
+      await sendChatMessageToRoom(data.room_id, data.client_id, data.message);
       return { statusCode: 200 };
 
     case "join_room":
-      await joinRoom(data.room_id, data.client_id);
-      await sendMessage(
-        data.client_id,
-        JSON.stringify({
-          type: "update_profile",
-          data: { room_id: data.room_id },
-        })
-      );
-      await sendMessageToRoom(
-        data.room_id,
-        JSON.stringify({
-          type: "system_message",
-          data: { message: `${data.client_id}さんが入室しました。` },
-        })
-      );
+      await Promise.all([
+        await joinRoom(data.room_id, data.client_id),
+        await updateProfile(data.client_id, { roomID: data.room_id }),
+        await sendSystemMessageToRoom(
+          data.room_id,
+          `${data.client_id}さんが入室しました。`
+        ),
+      ]);
       return { statusCode: 200 };
 
     default:
@@ -113,11 +106,68 @@ export const customEventHandler: Handler = async (
   }
 };
 
+// custom event wrapper ///////////////////////
+const sendChatMessageToRoom = async (
+  roomID: string,
+  fromClientID: string,
+  message: string
+) => {
+  const now = new Date();
+  const chatMessageRepository = new ChatMessageRepository(
+    env.CHAT_MESSAGE_TABLE_NAME
+  );
+
+  await Promise.all([
+    chatMessageRepository.saveMessage(
+      roomID,
+      fromClientID,
+      message,
+      now.toTimestampInSeconds()
+    ),
+    sendMessageToRoom(
+      roomID,
+      JSON.stringify({
+        type: "chat_message",
+        data: {
+          client_id: fromClientID,
+          room_id: roomID,
+          message,
+          timestamp: now.getTime(),
+        },
+      })
+    ),
+  ]);
+};
+
+const sendSystemMessageToRoom = async (roomID: string, message: string) => {
+  await sendMessageToRoom(
+    roomID,
+    JSON.stringify({
+      type: "system_message",
+      data: { message: message },
+    })
+  );
+};
+
+const updateProfile = async (
+  clientID: string,
+  profile: { clientID?: string; roomID?: string }
+) => {
+  await sendMessage(
+    clientID,
+    JSON.stringify({
+      type: "update_profile",
+      data: { client_id: profile.clientID, room_id: profile.roomID },
+    })
+  );
+};
+
 const joinRoom = async (roomID: string, clientID: string) => {
   const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
   await roomRepository.saveUserRoom(roomID, clientID);
 };
 
+// base send event /////////////////////////////
 const sendMessageToRoom = async (roomID: string, message: string) => {
   const roomRepository = new RoomRepository(env.ROOM_TABLE_NAME);
 
